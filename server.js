@@ -30,9 +30,13 @@ app.use(
 // ==========================================
 // CORS
 // ==========================================
+const frontendOrigin = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.replace(/\/+$/, "")
+  : "*";
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: frontendOrigin,
     credentials: true,
   })
 );
@@ -83,6 +87,16 @@ app.use("/api/teaching-assignments", require("./routes/teachingAssignmentRoutes"
 app.use("/api/classrooms", require("./routes/classroomRoutes"));
 app.use("/api/subjects", require("./routes/subjectRoutes"));
 app.use("/api/school-settings", require("./routes/schoolSettingsRoutes"));
+
+// ==========================================
+// HEALTH / ROOT ENDPOINT
+// ==========================================
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Student Portal API is running",
+  });
+});
 
 // ==========================================
 // 404 HANDLER
