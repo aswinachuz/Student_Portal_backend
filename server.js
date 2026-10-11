@@ -67,7 +67,11 @@ app.use(express.json());
 app.use(
   "/uploads",
   express.static(
-    path.join(__dirname, "uploads")
+    path.join(__dirname, "uploads"),
+    {
+      maxAge: "7d",
+      immutable: true,
+    }
   )
 );
 
