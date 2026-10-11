@@ -87,6 +87,7 @@ app.use("/api/teaching-assignments", require("./routes/teachingAssignmentRoutes"
 app.use("/api/classrooms", require("./routes/classroomRoutes"));
 app.use("/api/subjects", require("./routes/subjectRoutes"));
 app.use("/api/school-settings", require("./routes/schoolSettingsRoutes"));
+app.use("/api/teacher-attendance", require("./routes/teacherAttendanceRoutes"));
 
 // ==========================================
 // HEALTH / ROOT ENDPOINT

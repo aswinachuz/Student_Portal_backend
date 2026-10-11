@@ -25,24 +25,24 @@ router.get(
 );
 
 // ==========================================
-// TEACHER / ADMIN SUBMIT ATTENDANCE
+// TEACHER RECORD / EDIT STUDENT ATTENDANCE
 // ==========================================
 
 router.post(
   "/",
   protect,
-  authorize("admin", "teacher"),
+  authorize("teacher"),
   recordBatchAttendance
 );
 
 // ==========================================
-// ADMIN ATTENDANCE CORRECTION
+// TEACHER ATTENDANCE CORRECTION / EDITING
 // ==========================================
 
 router.put(
   "/correction",
   protect,
-  authorize("admin"),
+  authorize("teacher"),
   correctAttendance
 );
 

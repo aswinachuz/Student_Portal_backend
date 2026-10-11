@@ -60,97 +60,26 @@ exports.recordBatchAttendance = async (req, res) => {
     }
 
     // ------------------------------------------
-    // TEACHER CAN ONLY MARK TODAY
+    // NORMALIZE & VALIDATE DATE
     // ------------------------------------------
 
-    if (req.user.role === "teacher") {
-      const selectedDate =
-        new Date(date);
+    const attendanceDate = new Date(date);
 
-      if (
-        Number.isNaN(
-          selectedDate.getTime()
-        )
-      ) {
-        return res.status(400).json({
-          message:
-            "Invalid attendance date.",
-        });
-      }
-
-      const today = new Date();
-
-      const selectedDay =
-        new Date(
-          Date.UTC(
-            selectedDate.getUTCFullYear(),
-            selectedDate.getUTCMonth(),
-            selectedDate.getUTCDate()
-          )
-        );
-
-      const todayDay =
-        new Date(
-          Date.UTC(
-            today.getUTCFullYear(),
-            today.getUTCMonth(),
-            today.getUTCDate()
-          )
-        );
-
-      if (
-        selectedDay.getTime() !==
-        todayDay.getTime()
-      ) {
-        return res.status(400).json({
-          message:
-            "Teachers can only mark attendance for today.",
-        });
-      }
-    }
-
-    // ------------------------------------------
-    // NORMALIZE DATE
-    // ------------------------------------------
-
-    const attendanceDate =
-      new Date(date);
-
-    if (
-      Number.isNaN(
-        attendanceDate.getTime()
-      )
-    ) {
+    if (Number.isNaN(attendanceDate.getTime())) {
       return res.status(400).json({
-        message:
-          "Invalid attendance date.",
+        message: "Invalid attendance date.",
       });
     }
 
-    attendanceDate.setUTCHours(
-      0,
-      0,
-      0,
-      0
-    );
+    attendanceDate.setUTCHours(0, 0, 0, 0);
 
-    // ------------------------------------------
-    // CHECK EXISTING ATTENDANCE
-    // ------------------------------------------
+    const today = new Date();
+    today.setUTCHours(23, 59, 59, 999);
 
-    if (req.user.role === "teacher") {
-      const existingRecords =
-        await Attendance.find({
-          classroom: classroomId,
-          date: attendanceDate,
-        });
-
-      if (existingRecords.length > 0) {
-        return res.status(400).json({
-          message:
-            "Attendance for today has already been submitted. Teachers cannot edit submitted attendance.",
-        });
-      }
+    if (attendanceDate > today) {
+      return res.status(400).json({
+        message: "Cannot mark or edit attendance for future dates.",
+      });
     }
 
     // ------------------------------------------
@@ -216,35 +145,30 @@ exports.recordBatchAttendance = async (req, res) => {
     }
 
     // ------------------------------------------
-    // CREATE ATTENDANCE RECORDS
+    // SAVE / UPDATE ATTENDANCE RECORDS (UPSERT)
     // ------------------------------------------
 
-    const operations =
-      attendanceRecords.map(
-        (item) => ({
-          insertOne: {
-            document: {
-              student:
-                item.studentId,
-              classroom:
-                classroomId,
-              date: attendanceDate,
-              status:
-                item.status,
-              recordedBy:
-                req.user._id,
-            },
+    const operations = attendanceRecords.map((item) => ({
+      updateOne: {
+        filter: {
+          student: item.studentId,
+          classroom: classroomId,
+          date: attendanceDate,
+        },
+        update: {
+          $set: {
+            status: item.status,
+            recordedBy: req.user._id,
           },
-        })
-      );
+        },
+        upsert: true,
+      },
+    }));
 
-    await Attendance.bulkWrite(
-      operations
-    );
+    await Attendance.bulkWrite(operations);
 
-    return res.status(201).json({
-      message:
-        "Attendance submitted successfully.",
+    return res.status(200).json({
+      message: "Attendance saved successfully.",
     });
   } catch (error) {
     console.error(

@@ -13,7 +13,7 @@ exports.getSchoolSettings = async (req, res) => {
     // Create settings if not available
     if (!settings) {
       settings = await SchoolSettings.create({
-        schoolName: "Aswin's Public School",
+        schoolName: "Manchester International School",
         logo: "",
       });
     }
@@ -24,6 +24,40 @@ exports.getSchoolSettings = async (req, res) => {
 
   } catch (error) {
     console.error("GET SCHOOL SETTINGS ERROR:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
+// ==========================================
+// UPDATE SCHOOL SETTINGS (NAME)
+// ==========================================
+exports.updateSchoolSettings = async (req, res) => {
+  try {
+    const { schoolName } = req.body;
+
+    let settings = await SchoolSettings.findOne();
+
+    if (!settings) {
+      settings = new SchoolSettings({
+        schoolName: schoolName || "Manchester International School",
+      });
+    } else if (schoolName) {
+      settings.schoolName = schoolName;
+    }
+
+    await settings.save();
+
+    res.status(200).json({
+      message: "School settings updated successfully",
+      data: settings,
+    });
+
+  } catch (error) {
+    console.error("UPDATE SCHOOL SETTINGS ERROR:", error);
 
     res.status(500).json({
       message: error.message,
@@ -56,7 +90,7 @@ exports.uploadSchoolLogo = async (req, res) => {
     // Create settings if not available
     if (!settings) {
       settings = new SchoolSettings({
-        schoolName: "Aswin's Public School",
+        schoolName: "Manchester International School",
       });
     }
 

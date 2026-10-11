@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   getSchoolSettings,
+  updateSchoolSettings,
   uploadSchoolLogo,
   removeSchoolLogo,
 } = require("../controllers/schoolSettingsController");
@@ -24,6 +25,19 @@ const router = express.Router();
 router.get(
   "/",
   getSchoolSettings
+);
+
+
+// ==========================================
+// UPDATE SCHOOL SETTINGS (NAME)
+// ADMIN ONLY
+// ==========================================
+
+router.put(
+  "/",
+  protect,
+  authorize("admin"),
+  updateSchoolSettings
 );
 
 
