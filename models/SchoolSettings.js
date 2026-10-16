@@ -4,7 +4,7 @@ const schoolSettingsSchema = new mongoose.Schema(
   {
     schoolName: {
       type: String,
-      default: "Manchester International School",
+      default: "Manchester Public School",
     },
 
     logo: {

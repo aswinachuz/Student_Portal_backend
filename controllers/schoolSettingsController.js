@@ -13,9 +13,16 @@ exports.getSchoolSettings = async (req, res) => {
     // Create settings if not available
     if (!settings) {
       settings = await SchoolSettings.create({
-        schoolName: "Manchester International School",
+        schoolName: "Manchester Public School",
         logo: "",
       });
+    } else if (
+      !settings.schoolName ||
+      settings.schoolName.toLowerCase().includes("aswin") ||
+      settings.schoolName === "Manchester International School"
+    ) {
+      settings.schoolName = "Manchester Public School";
+      await settings.save();
     }
 
     res.status(200).json({
@@ -43,7 +50,7 @@ exports.updateSchoolSettings = async (req, res) => {
 
     if (!settings) {
       settings = new SchoolSettings({
-        schoolName: schoolName || "Manchester International School",
+        schoolName: schoolName || "Manchester Public School",
       });
     } else if (schoolName) {
       settings.schoolName = schoolName;
@@ -90,7 +97,7 @@ exports.uploadSchoolLogo = async (req, res) => {
     // Create settings if not available
     if (!settings) {
       settings = new SchoolSettings({
-        schoolName: "Manchester International School",
+        schoolName: "Manchester Public School",
       });
     }
 
