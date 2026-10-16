@@ -28,16 +28,72 @@ app.use(
 );
 
 // ==========================================
+// TRUST PROXY (Required for Render & Reverse Proxies)
+// ==========================================
+app.set("trust proxy", 1);
+
+// ==========================================
 // CORS
 // ==========================================
-const frontendOrigin = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.replace(/\/+$/, "")
-  : "*";
+const configuredOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+const defaultAllowedOrigins = [
+  "https://student-portal-phi-five.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "https://localhost",
+  "capacitor://localhost",
+  "http://localhost",
+];
+
+const allowedOrigins = Array.from(
+  new Set([...configuredOrigins, ...defaultAllowedOrigins])
+);
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // Allow mobile apps, curl, native requests without origin
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Allow localhost with any port
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+
+  // Allow Capacitor / Ionic origins
+  if (/^capacitor:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (/^ionic:\/\/localhost(:\d+)?$/.test(origin)) return true;
+
+  // Allow local LAN IPs (for mobile devices on same Wi-Fi)
+  if (/^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin)) return true;
+  if (/^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/.test(origin)) return true;
+
+  // Allow Vercel preview & production deployments
+  if (origin.endsWith(".vercel.app")) return true;
+
+  return false;
+};
 
 app.use(
   cors({
-    origin: frontendOrigin,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
   })
 );
 
